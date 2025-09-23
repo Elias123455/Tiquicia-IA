@@ -1,0 +1,53 @@
+{
+  "intents": [
+    {
+      "tag": "saludo",
+      "patterns": [
+        "Hola",
+        "Que tal",
+        "Hay alguien ahi?",
+        "Buenas",
+        "Buen dia"
+      ],
+      "responses": [
+        "¡Hola! ¿Cómo puedo ayudarte?",
+        "Hola, gracias por tu visita. ¿Qué necesitas?",
+        "¡Qué bueno verte por aquí! Pregúntame lo que sea."
+      ]
+    },
+    {
+      "tag": "despedida",
+      "patterns": ["Adios", "Hasta luego", "Nos vemos", "Chao"],
+      "responses": ["¡Hasta la próxima!", "¡Nos vemos! Cuídate.", "Adiós, espero haberte ayudado."]
+    },
+    {
+      "tag": "agradecimiento",
+      "patterns": ["Gracias", "Muchas gracias", "Te lo agradezco"],
+      "responses": ["¡De nada!", "¡No hay de qué!", "Me alegra poder ayudar."]
+    },
+    {
+      "tag": "nombre",
+      "patterns": [
+        "Como te llamas?",
+        "Cual es tu nombre?",
+        "Quien eres?"
+      ],
+      "responses": [
+        "Soy Tiquicia IA, tu asistente personal.",
+        "Mi nombre es Tiquicia IA.",
+        "Puedes llamarme Tiquicia IA."
+      ]
+    },
+    {
+      "tag": "creador",
+      "patterns": [
+        "Quien te creo?",
+        "Quien es tu creador?"
+      ],
+      "responses": [
+        "Fui creada como un proyecto increíble. ¡Mi creador es muy talentoso!",
+        "Nací de la mente de un desarrollador con grandes ideas."
+      ]
+    }
+  ]
+}

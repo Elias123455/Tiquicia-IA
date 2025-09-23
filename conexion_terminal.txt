@@ -1,0 +1,7 @@
+C:\Programacion\ArchivosGit\mi_ia_personal
+
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+
+.\venv\Scripts\activate
+
+python app.py

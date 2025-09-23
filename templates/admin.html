@@ -1,0 +1,206 @@
+<!-- 
+-----------------------------------------------------------------------------
+ ARCHIVO: admin.html (VERSIÓN 9.1 - Temas y Título Corregidos)
+-----------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Tiquicia IA</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { 
+            --primary-color: #3b82f6; 
+            --background-color: #121826; 
+            --surface-color: #1a2233; 
+            --text-color: #e1e1e1; 
+            --error-color: #ef4444; 
+            --user-bubble-color: #005c4b; 
+            --ia-bubble-color: #2a344a; 
+            --input-bg-color: #2c3652; 
+        }
+        body.light-mode {
+            --primary-color: #0d47a1;
+            --background-color: #f0f2f5;
+            --surface-color: #ffffff;
+            --text-color: #1c1e21;
+            --user-bubble-color: #d1e7ff;
+            --ia-bubble-color: #f0f0f0;
+            --input-bg-color: #e4e6eb;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
+        .admin-wrapper { display: flex; height: 100vh; }
+        .sidebar { background-color: var(--surface-color); width: 250px; padding: 1.5rem; display: flex; flex-direction: column; flex-shrink: 0; transition: background-color 0.3s; }
+        .sidebar h1 { color: var(--primary-color); font-size: 1.8rem; margin: 0 0 2rem 0; text-align: center; transition: color 0.3s; }
+        .sidebar nav a { color: var(--text-color); text-decoration: none; display: block; padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; transition: background-color 0.2s, color 0.2s; }
+        .sidebar nav a.active, .sidebar nav a:hover { background-color: var(--primary-color); color: #fff; }
+        .sidebar .logout-button { margin-top: auto; background-color: var(--error-color); color: #fff; text-align: center; padding: 0.8rem; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .main-content h2 { border-bottom: 2px solid var(--primary-color); padding: 0 2rem 0.5rem; margin: 2rem 2rem 1rem; }
+        .main-content .content-area { padding: 0 2rem 2rem; overflow-y: auto; }
+        .chat-container { width: 100%; height: 400px; max-width: 600px; margin-top: 2rem; border: 1px solid var(--primary-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; background-color: var(--surface-color); }
+        .chat-history { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; }
+        .message { max-width: 75%; padding: 0.75rem 1rem; border-radius: 12px; margin-bottom: 1rem; line-height: 1.4; }
+        .user-message { background-color: var(--user-bubble-color); color: #fff; align-self: flex-end; }
+        .ia-message { background-color: var(--ia-bubble-color); align-self: flex-start; }
+        body.light-mode .user-message, body.light-mode .ia-message { color: var(--text-color); }
+        .chat-input-area { display: flex; padding: 1rem; border-top: 1px solid var(--ia-bubble-color); }
+        #userInput { flex-grow: 1; border: none; padding: 0.75rem; border-radius: 12px; background-color: var(--input-bg-color); color: var(--text-color); font-size: 1rem; }
+        #sendButton { border: none; background-color: var(--primary-color); color: #fff; padding: 0.75rem 1.5rem; margin-left: 0.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        body.light-mode #sendButton { background-color: var(--primary-color); }
+        .config-section { margin-top: 2rem; border-top: 1px solid #4a5568; padding-top: 1.5rem; }
+        .config-item { display: flex; justify-content: space-between; align-items: center; }
+        .theme-switch { display: inline-block; height: 24px; position: relative; width: 48px; }
+        .theme-switch input { display:none; }
+        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; }
+        .slider:before { background-color: #fff; bottom: 4px; content: ""; height: 16px; left: 4px; position: absolute; transition: .4s; width: 16px; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .slider.round { border-radius: 24px; } .slider.round:before { border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="sidebar">
+            <h1>Tiquicia IA</h1>
+            <nav>
+                <a href="#" class="active" id="nav-dashboard">Dashboard</a>
+                <a href="#" id="nav-training">Entrenamiento</a>
+                <a href="#" id="nav-users">Usuarios</a>
+                <a href="#" id="nav-settings">Configuración</a>
+            </nav>
+            <div class="logout-button" id="logout-button">Cerrar Sesión</div>
+        </aside>
+        <main class="main-content" id="main-content">
+            <!-- El contenido se cargará dinámicamente aquí -->
+        </main>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ylolxyimkrmmcnitebjf.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsb2x4eWlta3JtbWNuaXRlYmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MzA2NjUsImV4cCI6MjA3MzQwNjY2NX0.CG8wwCNJKeOIRF7WmFjf6gQtqUx0wgVV-p-1xDUs5rg';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const logoutButton = document.getElementById('logout-button');
+        const mainContent = document.getElementById('main-content');
+        const navLinks = document.querySelectorAll('.sidebar nav a');
+        const base_url = "http://localhost:5000";
+
+        const contentTemplates = {
+            dashboard: `
+                <h2>Dashboard</h2>
+                <div class="content-area">
+                    <p>Bienvenido al panel de administración. Aquí podrás ver reportes y probar la IA.</p>
+                    <h3>Chat de Prueba</h3>
+                    <div class="chat-container">
+                        <div class="chat-history" id="chatHistory">
+                            <div class="message ia-message">Modo Admin: ¡Listo para probar!</div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="userInput" placeholder="Escribe un mensaje de prueba...">
+                            <button id="sendButton">Enviar</button>
+                        </div>
+                    </div>
+                </div>`,
+            training: `
+                <h2>Entrenamiento de la IA</h2>
+                <div class="content-area"><p>Aquí irá la interfaz para subir archivos de conocimiento y entrenar el modelo.</p></div>`,
+            users: `
+                <h2>Gestión de Usuarios</h2>
+                <div class="content-area"><p>Aquí podrás ver y gestionar los usuarios registrados en la plataforma.</p></div>`,
+            settings: `
+                <h2>Configuración</h2>
+                <div class="content-area">
+                    <p>Personaliza la apariencia y el comportamiento de la aplicación.</p>
+                    <div class="config-section">
+                        <div class="config-item">
+                            <span>Modo Claro / Oscuro</span>
+                            <label class="theme-switch">
+                                <input type="checkbox" id="themeToggle">
+                                <div class="slider round"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>`
+        };
+
+        function loadContent(contentKey) {
+            mainContent.innerHTML = contentTemplates[contentKey];
+            if (contentKey === 'dashboard') setupChat();
+            if (contentKey === 'settings') setupThemeToggle();
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.id === `nav-${contentKey}`) link.classList.add('active');
+            });
+        }
+
+        function setupThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('change', (e) => {
+                document.body.classList.toggle('light-mode', e.target.checked);
+                localStorage.setItem('theme', e.target.checked ? 'light' : 'dark');
+            });
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-mode');
+                themeToggle.checked = true;
+            }
+        }
+
+        function setupChat() {
+            const chatHistory = document.getElementById('chatHistory');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            function addMessage(sender, text) { const el = document.createElement('div'); el.classList.add('message', sender === 'user' ? 'user-message' : 'ia-message'); el.textContent = text; chatHistory.appendChild(el); chatHistory.scrollTop = chatHistory.scrollHeight; }
+            async function sendMessage() {
+                const question = userInput.value.trim();
+                if (question === '') return;
+                addMessage('user', question);
+                userInput.value = '';
+                try {
+                    const response = await fetch('/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) });
+                    if (!response.ok) throw new Error(`Error HTTP`);
+                    const data = await response.json();
+                    addMessage('ia', data.answer);
+                } catch (error) { addMessage('ia', "Error de conexión con el backend."); }
+            }
+            sendButton.addEventListener('click', sendMessage);
+            userInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') sendMessage(); });
+        }
+        
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const contentKey = e.target.id.replace('nav-', '');
+                loadContent(contentKey);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Aplicar tema guardado al cargar
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-mode');
+            }
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { window.location.href = base_url + '/'; return; }
+            
+            try {
+                const response = await fetch(base_url + '/get-user-role', { headers: { 'Authorization': `Bearer ${session.access_token}` } });
+                if (response.ok) {
+                    const userData = await response.json();
+                    if (userData.role !== 'admin') { window.location.href = base_url + '/chat'; }
+                    else { loadContent('dashboard'); }
+                } else { throw new Error('Error al verificar el rol.'); }
+            } catch (error) { console.error(error); window.location.href = base_url + '/'; }
+        });
+
+        logoutButton.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = base_url + '/';
+        });
+    </script>
+</body>
+</html>
+

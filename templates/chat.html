@@ -1,0 +1,225 @@
+<!-- 
+-----------------------------------------------------------------------------
+ ARCHIVO: chat.html (VERSIÓN 17.0 - CSS Modular y Correcciones de ChatGPT)
+ PROTOCOLO ACTIVADO: Fusión de funcionalidades verificada.
+-----------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Tiquicia IA</title>
+    <!-- Enlazamos la hoja de estilos externa de forma profesional con Flask/Jinja2 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="app-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h1>Tiquicia IA</h1>
+            </div>
+            <div class="sidebar-header"> 
+                <button id="new-chat-button">+ Nueva Conversación</button> 
+            </div>
+            <ul class="chat-list" id="chat-list"></ul>
+            <div class="sidebar-footer"> 
+                <a href="#" id="nav-settings">Configuración</a> 
+                <button id="logout-button">Cerrar Sesión</button> 
+            </div>
+        </aside>
+
+        <main class="main-area">
+            <div id="content-chat" class="content-section">
+                <div class="chat-container">
+                    <div id="welcome-message">
+                        <img src="/static/images/oso.png" alt="Mascota Tiquicia IA" class="mascot-light">
+                        <img src="/static/images/oso02.png" alt="Mascota Tiquicia IA" class="mascot-dark">
+                        <h2>Bienvenido a Tiquicia IA</h2>
+                        <p>Selecciona un chat o crea uno nuevo para empezar.</p>
+                    </div>
+                    <div class="chat-history" id="chat-history"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="userInput" placeholder="Escribe tu mensaje aquí..." autocomplete="off" disabled>
+                        <button id="sendButton" disabled>Enviar</button>
+                    </div>
+                </div>
+            </div>
+            <div id="content-settings" class="content-section">
+                <div class="settings-content">
+                    <h2>Configuración</h2>
+                    <div class="config-item"> 
+                        <span>Modo Oscuro</span> 
+                        <label class="theme-switch"> 
+                            <input type="checkbox" id="themeToggle"> 
+                            <div class="slider round"></div> 
+                        </label> 
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ylolxyimkrmmcnitebjf.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsb2x4eWlta3JtbWNuaXRlYmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MzA2NjUsImV4cCI6MjA3MzQwNjY2NX0.CG8wwCNJKeOIRF7WmFjf6gQtqUx0wgVV-p-1xDUs5rg';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const base_url = "http://localhost:5000";
+
+        const chatListEl = document.getElementById('chat-list');
+        const chatHistoryEl = document.getElementById('chat-history');
+        const welcomeMessageEl = document.getElementById('welcome-message');
+        const userInputEl = document.getElementById('userInput');
+        const sendButtonEl = document.getElementById('sendButton');
+        const newChatButtonEl = document.getElementById('new-chat-button');
+        const logoutButtonEl = document.getElementById('logout-button');
+        const settingsNavEl = document.getElementById('nav-settings');
+        const contentChatEl = document.getElementById('content-chat');
+        const contentSettingsEl = document.getElementById('content-settings');
+        const themeToggleEl = document.getElementById('themeToggle');
+        
+        let currentChatId = null;
+        let session = null;
+        
+        // --- FUNCIÓN CORREGIDA POR CHATGPT ---
+        function renderChatItem(chat) {
+            const li = document.createElement('li');
+            li.dataset.chatId = chat.id;
+            li.classList.add('chat-list-item');
+
+            const title = document.createElement('span');
+            // Corregido: usamos "Nueva Conversación" como fallback
+            title.textContent = chat.title && chat.title.trim() !== "" ? chat.title : "Nueva Conversación";
+            title.classList.add('chat-title');
+            li.appendChild(title);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '&#128465;';
+            deleteBtn.classList.add('delete-chat-btn');
+            deleteBtn.onclick = (e) => { e.stopPropagation(); deleteChat(chat.id); };
+            li.appendChild(deleteBtn);
+
+            li.addEventListener('click', () => selectChat(chat.id));
+            return li;
+        }
+
+        function addMessage(sender, text) { const el = document.createElement('div'); el.classList.add('message', sender === 'user' ? 'user-message' : 'ia-message'); el.textContent = text; chatHistoryEl.appendChild(el); chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight; }
+        function showView(viewName) { contentChatEl.classList.remove('visible'); contentSettingsEl.classList.remove('visible'); if (viewName === 'chat') { contentChatEl.classList.add('visible'); showChatContent(!currentChatId); } if (viewName === 'settings') { contentSettingsEl.classList.add('visible'); } }
+        function showChatContent(showWelcome) { welcomeMessageEl.style.display = showWelcome ? 'flex' : 'none'; chatHistoryEl.style.display = showWelcome ? 'none' : 'flex'; userInputEl.disabled = showWelcome; sendButtonEl.disabled = showWelcome; }
+        async function fetchWithAuth(url, options = {}) { if (!session) throw new Error("No hay sesión activa."); const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`, ...options.headers }; return fetch(url, { ...options, headers }); }
+        
+        async function loadChats() {
+            try {
+                const response = await fetchWithAuth(base_url + '/api/chats');
+                if (!response.ok) throw new Error('No se pudieron cargar los chats.');
+                const chats = await response.json();
+                chatListEl.innerHTML = '';
+                if (chats.length > 0) {
+                    chats.forEach(chat => chatListEl.appendChild(renderChatItem(chat)));
+                    if (!currentChatId) {
+                        selectChat(chats[0].id);
+                    } else {
+                        document.querySelector(`.chat-list-item[data-chat-id='${currentChatId}']`)?.classList.add('active');
+                    }
+                } else {
+                    await createNewChat();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function selectChat(chatId) {
+            if (currentChatId === chatId && contentSettingsEl.classList.contains('visible')) { showView('chat'); return; }
+            if (currentChatId === chatId) return;
+            currentChatId = chatId;
+            showView('chat');
+            chatHistoryEl.innerHTML = '';
+            document.querySelectorAll('.chat-list-item').forEach(item => item.classList.toggle('active', item.dataset.chatId == chatId));
+            try {
+                const response = await fetchWithAuth(`${base_url}/api/chats/${chatId}/messages`);
+                if (!response.ok) throw new Error('No se pudieron cargar los mensajes.');
+                const messages = await response.json();
+                messages.forEach(msg => addMessage(msg.sender, msg.content));
+            } catch (error) { addMessage('ia', 'Error al cargar el historial.'); }
+        }
+
+        // --- FUNCIÓN CORREGIDA POR CHATGPT ---
+        async function createNewChat() {
+            try {
+                const response = await fetchWithAuth(base_url + '/api/chats', { method: 'POST' });
+                if (!response.ok) throw new Error('No se pudo crear un nuevo chat.');
+                const newChat = await response.json();
+
+                const newChatItem = renderChatItem(newChat);
+                chatListEl.prepend(newChatItem);
+
+                // Activamos visualmente este chat nuevo
+                selectChat(newChat.id);
+            } catch (error) {
+                console.error(error);
+                alert("Error al crear la conversación.");
+            }
+        }
+
+        async function deleteChat(chatId) {
+            try {
+                const response = await fetchWithAuth(`${base_url}/api/chats/${chatId}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (!response.ok) { throw new Error(result.error || 'No se pudo eliminar el chat.'); }
+                document.querySelector(`.chat-list-item[data-chat-id='${chatId}']`).remove();
+                if (currentChatId === chatId) {
+                    currentChatId = null;
+                    showView('chat');
+                }
+                if (chatListEl.children.length === 0) {
+                    await createNewChat();
+                }
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+            }
+        }
+
+        async function sendMessage() {
+            const question = userInputEl.value.trim();
+            if (question === '' || !currentChatId) return;
+            addMessage('user', question);
+            const currentTitleEl = document.querySelector(`.chat-list-item[data-chat-id='${currentChatId}'] .chat-title`);
+            const isNewChat = currentTitleEl && (currentTitleEl.textContent === 'Nueva Conversación' || currentTitleEl.textContent === 'Conversación Inicial');
+            userInputEl.value = '';
+            try {
+                const response = await fetchWithAuth(base_url + '/predict', { method: 'POST', body: JSON.stringify({ question, chat_id: currentChatId }) });
+                if (!response.ok) throw new Error(`Error HTTP`);
+                const data = await response.json();
+                addMessage('ia', data.answer);
+                if (isNewChat) { currentTitleEl.textContent = question; }
+            } catch (error) { addMessage('ia', "Lo siento, algo salió mal."); }
+        }
+        
+        newChatButtonEl.addEventListener('click', createNewChat);
+        sendButtonEl.addEventListener('click', sendMessage);
+        userInputEl.addEventListener('keydown', (event) => { if (event.key === 'Enter') sendMessage(); });
+        logoutButtonEl.addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = base_url + '/'; });
+        settingsNavEl.addEventListener('click', (e) => { e.preventDefault(); showView('settings'); });
+        themeToggleEl.addEventListener('change', (e) => { document.body.classList.toggle('dark-mode', e.target.checked); localStorage.setItem('theme', e.target.checked ? 'dark' : 'light'); });
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeToggleEl.checked = true;
+            }
+            const { data } = await supabase.auth.getSession();
+            if (!data.session) {
+                window.location.href = base_url + '/';
+            } else {
+                session = data.session;
+                showView('chat');
+                await loadChats();
+            }
+        });
+    </script>
+</body>
+</html>
+

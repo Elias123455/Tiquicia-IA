@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova IA</title>
+    <!-- Estilos CSS -->
+    <style>
+        :root {
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --text-color: #e1e1e1;
+            --user-bubble-color: #005c4b;
+            --ia-bubble-color: #2a2a2a;
+            --input-bg-color: #2c2c2c;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystem-Font, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 100%;
+            max-height: 800px;
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 1rem;
+            background-color: rgba(0,0,0,0.2);
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        
+        .chat-header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .chat-history {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-history::-webkit-scrollbar { width: 8px; }
+        .chat-history::-webkit-scrollbar-track { background: var(--surface-color); }
+        .chat-history::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 20px; border: 3px solid var(--surface-color); }
+
+        .message {
+            max-width: 75%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        .user-message {
+            background-color: var(--user-bubble-color);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ia-message {
+            background-color: var(--ia-bubble-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .typing-indicator {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+        }
+        .typing-indicator span {
+            height: 8px; width: 8px; background-color: #666; border-radius: 50%;
+            display: inline-block; margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        .chat-input-area {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #333;
+            background-color: rgba(0,0,0,0.2);
+        }
+
+        #userInput {
+            flex-grow: 1; border: none; padding: 0.75rem; border-radius: var(--border-radius);
+            background-color: var(--input-bg-color); color: var(--text-color); font-size: 1rem;
+        }
+        #userInput:focus { outline: none; box-shadow: 0 0 0 2px var(--primary-color); }
+
+        #sendButton {
+            border: none; background-color: var(--primary-color); color: var(--background-color);
+            padding: 0.75rem 1.5rem; margin-left: 0.5rem; border-radius: var(--border-radius);
+            cursor: pointer; font-weight: bold; transition: background-color 0.2s;
+        }
+        #sendButton:hover { background-color: #a063f0; }
+    </style>
+</head>
+<body>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Nova IA</h1>
+        </div>
+        <div class="chat-history" id="chatHistory">
+            <div class="message ia-message">
+                Hola, soy Nova. ¿En qué puedo ayudarte hoy?
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Escribe tu mensaje aquí..." autocomplete="off">
+            <button id="sendButton">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        const chatHistory = document.getElementById('chatHistory');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        function addMessage(sender, text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender === 'user' ? 'user-message' : 'ia-message');
+            messageElement.textContent = text;
+            chatHistory.appendChild(messageElement);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const typingElement = document.createElement('div');
+            typingElement.classList.add('message', 'ia-message', 'typing-indicator');
+            typingElement.id = 'typing-indicator';
+            typingElement.innerHTML = '<span></span><span></span><span></span>';
+            chatHistory.appendChild(typingElement);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        
+        function hideTypingIndicator() {
+            const typingElement = document.getElementById('typing-indicator');
+            if (typingElement) typingElement.remove();
+        }
+        
+        async function sendMessage() {
+            const question = userInput.value.trim();
+            if (question === '') return;
+
+            addMessage('user', question);
+            userInput.value = '';
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question })
+                });
+
+                if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+
+                const data = await response.json();
+                hideTypingIndicator();
+                addMessage('ia', data.answer);
+
+            } catch (error) {
+                console.error("Hubo un error al contactar a la IA:", error);
+                hideTypingIndicator();
+                addMessage('ia', "Lo siento, algo salió mal. No pude conectarme con mi cerebro.");
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
+
