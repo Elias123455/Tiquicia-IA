@@ -1,45 +1,48 @@
 <!-- 
 -----------------------------------------------------------------------------
- ARCHIVO: admin.html (VERSIÓN 9.1 - Temas y Título Corregidos)
+ ARCHIVO: admin.html (VERSIÓN 15.0 - ESTRUCTURA COMENTADA Y ROBUSTA)
 -----------------------------------------------------------------------------
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- A1: METADATOS Y LIBRERÍAS EXTERNAS -->
+    <!-- Definimos la información de la página y cargamos Supabase. -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Tiquicia IA</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- B1: ESTILOS CSS DE LA PÁGINA -->
+    <!-- Todo el diseño visual del panel de administración vive aquí. -->
     <style>
+        /* B2: Variables de Color y Estilos Generales */
         :root { 
-            --primary-color: #3b82f6; 
-            --background-color: #121826; 
-            --surface-color: #1a2233; 
-            --text-color: #e1e1e1; 
-            --error-color: #ef4444; 
-            --user-bubble-color: #005c4b; 
-            --ia-bubble-color: #2a344a; 
-            --input-bg-color: #2c3652; 
+            --primary-color: #3b82f6; --background-color: #121826; --surface-color: #1a2233; 
+            --text-color: #e1e1e1; --error-color: #ef4444; --user-bubble-color: #005c4b; 
+            --ia-bubble-color: #2a344a; --input-bg-color: #2c3652; 
         }
         body.light-mode {
-            --primary-color: #0d47a1;
-            --background-color: #f0f2f5;
-            --surface-color: #ffffff;
-            --text-color: #1c1e21;
-            --user-bubble-color: #d1e7ff;
-            --ia-bubble-color: #f0f0f0;
+            --primary-color: #0d47a1; --background-color: #f0f2f5; --surface-color: #ffffff;
+            --text-color: #1c1e21; --user-bubble-color: #d1e7ff; --ia-bubble-color: #f0f0f0;
             --input-bg-color: #e4e6eb;
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
         .admin-wrapper { display: flex; height: 100vh; }
+
+        /* B3: Estilos de la Barra Lateral (Sidebar) */
         .sidebar { background-color: var(--surface-color); width: 250px; padding: 1.5rem; display: flex; flex-direction: column; flex-shrink: 0; transition: background-color 0.3s; }
         .sidebar h1 { color: var(--primary-color); font-size: 1.8rem; margin: 0 0 2rem 0; text-align: center; transition: color 0.3s; }
         .sidebar nav a { color: var(--text-color); text-decoration: none; display: block; padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; transition: background-color 0.2s, color 0.2s; }
         .sidebar nav a.active, .sidebar nav a:hover { background-color: var(--primary-color); color: #fff; }
         .sidebar .logout-button { margin-top: auto; background-color: var(--error-color); color: #fff; text-align: center; padding: 0.8rem; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+        
+        /* B4: Estilos del Contenido Principal */
         .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
         .main-content h2 { border-bottom: 2px solid var(--primary-color); padding: 0 2rem 0.5rem; margin: 2rem 2rem 1rem; }
         .main-content .content-area { padding: 0 2rem 2rem; overflow-y: auto; }
+        
+        /* B5: Estilos del Chat de Prueba */
         .chat-container { width: 100%; height: 400px; max-width: 600px; margin-top: 2rem; border: 1px solid var(--primary-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; background-color: var(--surface-color); }
         .chat-history { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; }
         .message { max-width: 75%; padding: 0.75rem 1rem; border-radius: 12px; margin-bottom: 1rem; line-height: 1.4; }
@@ -49,7 +52,8 @@
         .chat-input-area { display: flex; padding: 1rem; border-top: 1px solid var(--ia-bubble-color); }
         #userInput { flex-grow: 1; border: none; padding: 0.75rem; border-radius: 12px; background-color: var(--input-bg-color); color: var(--text-color); font-size: 1rem; }
         #sendButton { border: none; background-color: var(--primary-color); color: #fff; padding: 0.75rem 1.5rem; margin-left: 0.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; }
-        body.light-mode #sendButton { background-color: var(--primary-color); }
+        
+        /* B6: Estilos de la Pestaña de Configuración */
         .config-section { margin-top: 2rem; border-top: 1px solid #4a5568; padding-top: 1.5rem; }
         .config-item { display: flex; justify-content: space-between; align-items: center; }
         .theme-switch { display: inline-block; height: 24px; position: relative; width: 48px; }
@@ -62,9 +66,12 @@
     </style>
 </head>
 <body>
+    <!-- C1: ESTRUCTURA HTML DEL PANEL DE ADMIN -->
+    <!-- Aquí definimos todos los elementos visibles en la página. -->
     <div class="admin-wrapper">
+        <!-- C2: Barra Lateral de Navegación -->
         <aside class="sidebar">
-            <h1>Tiquicia IA</h1>
+            <h1>Admin</h1>
             <nav>
                 <a href="#" class="active" id="nav-dashboard">Dashboard</a>
                 <a href="#" id="nav-training">Entrenamiento</a>
@@ -73,134 +80,125 @@
             </nav>
             <div class="logout-button" id="logout-button">Cerrar Sesión</div>
         </aside>
+        <!-- C3: Área de Contenido Principal -->
         <main class="main-content" id="main-content">
-            <!-- El contenido se cargará dinámicamente aquí -->
+            <!-- El contenido de las pestañas se cargará aquí dinámicamente con JavaScript. -->
         </main>
     </div>
 
+    <!-- D1: LÓGICA JAVASCRIPT -->
+    <!-- Todo el comportamiento interactivo del panel está aquí. -->
     <script>
-        const SUPABASE_URL = 'https://ylolxyimkrmmcnitebjf.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsb2x4eWlta3JtbWNuaXRlYmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MzA2NjUsImV4cCI6MjA3MzQwNjY2NX0.CG8wwCNJKeOIRF7WmFjf6gQtqUx0wgVV-p-1xDUs5rg';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // --- D2: CONFIGURACIÓN Y REFERENCIAS A ELEMENTOS ---
+    // Conectamos con Supabase y guardamos referencias a los elementos HTML.
+    const SUPABASE_URL = 'https://ylolxyimkrmmcnitebjf.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlsb2x4eWlta3JtbWNuaXRlYmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MzA2NjUsImV4cCI6MjA3MzQwNjY2NX0.CG8wwCNJKeOIRF7WmFjf6gQtqUx0wgVV-p-1xDUs5rg';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const logoutButton = document.getElementById('logout-button');
-        const mainContent = document.getElementById('main-content');
-        const navLinks = document.querySelectorAll('.sidebar nav a');
-        const base_url = "http://localhost:5000";
+    const form = document.getElementById('auth-form');
+    const subtitle = document.getElementById('form-subtitle');
+    const submitButton = document.getElementById('submit-button');
+    const toggleLink = document.getElementById('toggle-link');
+    const toggleText = document.getElementById('toggle-text');
+    const confirmPasswordGroup = document.getElementById('confirm-password-group');
+    const passwordInput = document.getElementById('password');
+    const passwordCriteria = document.getElementById('password-criteria');
+    const termsGroup = document.getElementById('terms-group');
+    const termsCheckbox = document.getElementById('terms');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const toast = document.getElementById('toast');
+    let isLogin = true;
+    let passwordIsValid = false;
+    const base_url = "http://localhost:5000";
 
-        const contentTemplates = {
-            dashboard: `
-                <h2>Dashboard</h2>
-                <div class="content-area">
-                    <p>Bienvenido al panel de administración. Aquí podrás ver reportes y probar la IA.</p>
-                    <h3>Chat de Prueba</h3>
-                    <div class="chat-container">
-                        <div class="chat-history" id="chatHistory">
-                            <div class="message ia-message">Modo Admin: ¡Listo para probar!</div>
-                        </div>
-                        <div class="chat-input-area">
-                            <input type="text" id="userInput" placeholder="Escribe un mensaje de prueba...">
-                            <button id="sendButton">Enviar</button>
-                        </div>
-                    </div>
-                </div>`,
-            training: `
-                <h2>Entrenamiento de la IA</h2>
-                <div class="content-area"><p>Aquí irá la interfaz para subir archivos de conocimiento y entrenar el modelo.</p></div>`,
-            users: `
-                <h2>Gestión de Usuarios</h2>
-                <div class="content-area"><p>Aquí podrás ver y gestionar los usuarios registrados en la plataforma.</p></div>`,
-            settings: `
-                <h2>Configuración</h2>
-                <div class="content-area">
-                    <p>Personaliza la apariencia y el comportamiento de la aplicación.</p>
-                    <div class="config-section">
-                        <div class="config-item">
-                            <span>Modo Claro / Oscuro</span>
-                            <label class="theme-switch">
-                                <input type="checkbox" id="themeToggle">
-                                <div class="slider round"></div>
-                            </label>
-                        </div>
-                    </div>
-                </div>`
-        };
+    // --- D3: FUNCIONES DE AYUDA (UI) ---
+    // Pequeñas funciones para mostrar notificaciones y el estado de carga.
+    function showToast(message, type = 'error') {
+        toast.textContent = message;
+        toast.className = `toast-notification ${type} show`;
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 4000);
+    }
 
-        function loadContent(contentKey) {
-            mainContent.innerHTML = contentTemplates[contentKey];
-            if (contentKey === 'dashboard') setupChat();
-            if (contentKey === 'settings') setupThemeToggle();
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.id === `nav-${contentKey}`) link.classList.add('active');
-            });
-        }
+    function setLoading(isLoading) {
+        loadingOverlay.classList.toggle('visible', isLoading);
+        Array.from(form.elements).forEach(element => element.disabled = isLoading);
+    }
 
-        function setupThemeToggle() {
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.addEventListener('change', (e) => {
-                document.body.classList.toggle('light-mode', e.target.checked);
-                localStorage.setItem('theme', e.target.checked ? 'light' : 'dark');
-            });
-            if (localStorage.getItem('theme') === 'light') {
-                document.body.classList.add('light-mode');
-                themeToggle.checked = true;
+    // --- D4: LÓGICA PRINCIPAL (LOGIN Y REGISTRO) ---
+    // Esta es la función más importante, se ejecuta al enviar el formulario.
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        setLoading(true);
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            if (isLogin) {
+                // Lógica para Iniciar Sesión
+                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+                if (signInError) throw signInError;
+                
+                const response = await fetch(base_url + '/get-user-role', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${signInData.session.access_token}` }
+                });
+                if (!response.ok) throw new Error("No se pudo verificar el rol del usuario.");
+
+                const userData = await response.json();
+                if (userData.role === 'admin') {
+                    window.location.href = base_url + '/admin';
+                } else {
+                    window.location.href = base_url + '/chat';
+                }
+            } else {
+                // Lógica para Registrarse
+                if (!passwordIsValid || !termsCheckbox.checked) { throw new Error("Por favor, cumple todos los requisitos y acepta los términos."); }
+                const confirmPassword = document.getElementById('confirm-password').value;
+                if (password !== confirmPassword) { throw new Error('Las contraseñas no coinciden.'); }
+                
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+                
+                if (signUpError) {
+                    // **VERSIÓN CORREGIDA Y ROBUSTA DE LA DETECCIÓN DE USUARIO**
+                    if (signUpError.message && (signUpError.message.includes('User already registered') || signUpError.message.includes('already exists'))) {
+                        // Lanzamos un error específico que será capturado abajo.
+                        throw new Error('Este correo ya está registrado. Por favor, inicia sesión.');
+                    }
+                    // Si es otro error, lo lanzamos igualmente.
+                    throw signUpError;
+                }
+                
+                // Si el registro es exitoso...
+                showToast("¡Cuenta creada! Revisa tu correo para confirmar y luego inicia sesión.", "success");
+                // **CORRECCIÓN CLAVE:** Solo refrescamos si el registro FUE exitoso.
+                setTimeout(() => {
+                    // Cambiamos a la vista de login para que el usuario pueda entrar.
+                    toggleLink.click(); 
+                    form.reset(); // Limpiamos el formulario.
+                }, 4000);
             }
+        } catch (error) {
+            // **Este bloque ahora captura TODOS los errores, incluido el de "usuario ya existe".**
+            showToast(error.message || 'Ocurrió un error inesperado.', 'error');
+        } finally {
+            // Esto se ejecuta siempre, haya error o no.
+            setLoading(false);
         }
-
-        function setupChat() {
-            const chatHistory = document.getElementById('chatHistory');
-            const userInput = document.getElementById('userInput');
-            const sendButton = document.getElementById('sendButton');
-            function addMessage(sender, text) { const el = document.createElement('div'); el.classList.add('message', sender === 'user' ? 'user-message' : 'ia-message'); el.textContent = text; chatHistory.appendChild(el); chatHistory.scrollTop = chatHistory.scrollHeight; }
-            async function sendMessage() {
-                const question = userInput.value.trim();
-                if (question === '') return;
-                addMessage('user', question);
-                userInput.value = '';
-                try {
-                    const response = await fetch('/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) });
-                    if (!response.ok) throw new Error(`Error HTTP`);
-                    const data = await response.json();
-                    addMessage('ia', data.answer);
-                } catch (error) { addMessage('ia', "Error de conexión con el backend."); }
-            }
-            sendButton.addEventListener('click', sendMessage);
-            userInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') sendMessage(); });
-        }
-        
-        navLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const contentKey = e.target.id.replace('nav-', '');
-                loadContent(contentKey);
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Aplicar tema guardado al cargar
-            if (localStorage.getItem('theme') === 'light') {
-                document.body.classList.add('light-mode');
-            }
-
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { window.location.href = base_url + '/'; return; }
-            
-            try {
-                const response = await fetch(base_url + '/get-user-role', { headers: { 'Authorization': `Bearer ${session.access_token}` } });
-                if (response.ok) {
-                    const userData = await response.json();
-                    if (userData.role !== 'admin') { window.location.href = base_url + '/chat'; }
-                    else { loadContent('dashboard'); }
-                } else { throw new Error('Error al verificar el rol.'); }
-            } catch (error) { console.error(error); window.location.href = base_url + '/'; }
-        });
-
-        logoutButton.addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.href = base_url + '/';
-        });
-    </script>
+    });
+    
+    // --- D5: LÓGICA SECUNDARIA (VALIDACIÓN Y UI) ---
+    // El resto del código que maneja la interfaz, como cambiar entre login/registro.
+    function updateSubmitButtonState() { if (isLogin) { submitButton.disabled = false; } else { submitButton.disabled = !(passwordIsValid && termsCheckbox.checked); } }
+    toggleLink.addEventListener('click', () => { isLogin = !isLogin; subtitle.textContent = isLogin ? 'Inicia sesión para continuar.' : 'Crea una cuenta para empezar.'; submitButton.textContent = isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'; toggleText.textContent = isLogin ? '¿No tienes una cuenta?' : '¿Ya tienes una cuenta?'; toggleLink.textContent = isLogin ? 'Regístrate' : 'Inicia Sesión'; confirmPasswordGroup.style.display = isLogin ? 'none' : 'block'; passwordCriteria.style.display = isLogin ? 'none' : 'block'; termsGroup.style.display = isLogin ? 'none' : 'block'; updateSubmitButtonState(); });
+    function setupPasswordToggle(toggleId, inputId) { const toggle = document.getElementById(toggleId); const input = document.getElementById(inputId); const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`; const eyeOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`; toggle.addEventListener('click', () => { if (input.type === 'password') { input.type = 'text'; toggle.innerHTML = eyeOffIcon; } else { input.type = 'password'; toggle.innerHTML = eyeIcon; } }); }
+    setupPasswordToggle('togglePassword', 'password');
+    setupPasswordToggle('toggleConfirmPassword', 'confirm-password');
+    passwordInput.addEventListener('input', () => { const value = passwordInput.value; const checks = { length: value.length >= 8, upper: /[A-Z]/.test(value), number: /[0-9]/.test(value), special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(value) }; document.getElementById('length').className = checks.length ? 'valid' : 'invalid'; document.getElementById('upper').className = checks.upper ? 'valid' : 'invalid'; document.getElementById('number').className = checks.number ? 'valid' : 'invalid'; document.getElementById('special').className = checks.special ? 'valid' : 'invalid'; passwordIsValid = Object.values(checks).every(Boolean); updateSubmitButtonState(); });
+    termsCheckbox.addEventListener('change', updateSubmitButtonState);
+    updateSubmitButtonState();
+</script>
 </body>
 </html>
 

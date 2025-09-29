@@ -1,0 +1,48 @@
+ :root { 
+            --primary-color: #3b82f6; 
+            --background-color: #121826; 
+            --surface-color: #1a2233; 
+            --text-color: #e1e1e1; 
+            --error-color: #ef4444; 
+            --user-bubble-color: #005c4b; 
+            --ia-bubble-color: #2a344a; 
+            --input-bg-color: #2c3652; 
+        }
+        body.light-mode {
+            --primary-color: #0d47a1;
+            --background-color: #f0f2f5;
+            --surface-color: #ffffff;
+            --text-color: #1c1e21;
+            --user-bubble-color: #d1e7ff;
+            --ia-bubble-color: #f0f0f0;
+            --input-bg-color: #e4e6eb;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--background-color); color: var(--text-color); margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s; }
+        .admin-wrapper { display: flex; height: 100vh; }
+        .sidebar { background-color: var(--surface-color); width: 250px; padding: 1.5rem; display: flex; flex-direction: column; flex-shrink: 0; transition: background-color 0.3s; }
+        .sidebar h1 { color: var(--primary-color); font-size: 1.8rem; margin: 0 0 2rem 0; text-align: center; transition: color 0.3s; }
+        .sidebar nav a { color: var(--text-color); text-decoration: none; display: block; padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; transition: background-color 0.2s, color 0.2s; }
+        .sidebar nav a.active, .sidebar nav a:hover { background-color: var(--primary-color); color: #fff; }
+        .sidebar .logout-button { margin-top: auto; background-color: var(--error-color); color: #fff; text-align: center; padding: 0.8rem; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .main-content h2 { border-bottom: 2px solid var(--primary-color); padding: 0 2rem 0.5rem; margin: 2rem 2rem 1rem; }
+        .main-content .content-area { padding: 0 2rem 2rem; overflow-y: auto; }
+        .chat-container { width: 100%; height: 400px; max-width: 600px; margin-top: 2rem; border: 1px solid var(--primary-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; background-color: var(--surface-color); }
+        .chat-history { flex-grow: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; }
+        .message { max-width: 75%; padding: 0.75rem 1rem; border-radius: 12px; margin-bottom: 1rem; line-height: 1.4; }
+        .user-message { background-color: var(--user-bubble-color); color: #fff; align-self: flex-end; }
+        .ia-message { background-color: var(--ia-bubble-color); align-self: flex-start; }
+        body.light-mode .user-message, body.light-mode .ia-message { color: var(--text-color); }
+        .chat-input-area { display: flex; padding: 1rem; border-top: 1px solid var(--ia-bubble-color); }
+        #userInput { flex-grow: 1; border: none; padding: 0.75rem; border-radius: 12px; background-color: var(--input-bg-color); color: var(--text-color); font-size: 1rem; }
+        #sendButton { border: none; background-color: var(--primary-color); color: #fff; padding: 0.75rem 1.5rem; margin-left: 0.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        body.light-mode #sendButton { background-color: var(--primary-color); }
+        .config-section { margin-top: 2rem; border-top: 1px solid #4a5568; padding-top: 1.5rem; }
+        .config-item { display: flex; justify-content: space-between; align-items: center; }
+        .theme-switch { display: inline-block; height: 24px; position: relative; width: 48px; }
+        .theme-switch input { display:none; }
+        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; }
+        .slider:before { background-color: #fff; bottom: 4px; content: ""; height: 16px; left: 4px; position: absolute; transition: .4s; width: 16px; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .slider.round { border-radius: 24px; } .slider.round:before { border-radius: 50%; }
